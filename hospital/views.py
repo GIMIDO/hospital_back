@@ -5,19 +5,21 @@ from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
 
 from .serializers import *
-from .authentication import get_access_token, authorise_only, is_not_doctor, is_admin, verify_request_token
+from .authentication import get_access_token, verify_request_token, authorise_only, is_not_doctor, is_admin
 
 
-pageSize = 1
+pageSize = 5
 
 class CustomerView(APIView):
 
     @authorise_only
-    def get(self, request):
+    def get(self, request, num):
         customers = Customer.objects.all()
-        serializer = CustomerSerializer(customers, many=True)
+        paginator = Paginator(customers, pageSize)
+        pageObj = paginator.page(num)
+        serializer = CustomerSerializer(pageObj.object_list, many=True)
 
-        return Response({"customers": serializer.data})
+        return Response({"customers": serializer.data, "isNotLastPage": pageObj.has_next()})
     
     @is_not_doctor
     def post(self, request):
@@ -31,8 +33,8 @@ class CustomerView(APIView):
         return Response({"success": "Customer {} created successfully".format(customer_saved.name)})
 
     @is_not_doctor
-    def put(self, request, pk):
-        savedCustomer = Customer.objects.get(pk=pk)
+    def put(self, request, num):
+        savedCustomer = Customer.objects.get(pk=num)
         customer = request.data.get('customer')
         serializer = CustomerSerializer(instance=savedCustomer, data=customer, partial=True)
 
@@ -42,8 +44,8 @@ class CustomerView(APIView):
         return Response({"success": "Customer {} updated successfully".format(customer_saved.name)})
     
     @is_admin
-    def delete(self, request, pk):
-        customerForDelete = Customer.objects.get(pk=pk)
+    def delete(self, request, num):
+        customerForDelete = Customer.objects.get(pk=num)
         customerForDelete.delete()
 
         return Response({"success": "Customer {} deleted successfully".format(customerForDelete.name)})
@@ -137,13 +139,17 @@ class EmployeeView(APIView):
 class AppointmentView(APIView):
 
     @authorise_only
-    def get(self, request):
+    def get(self, request, num):
 
         appointments = Appointment.objects.all()
-        serializer = AppointmentSerializer(appointments, many=True)
+        
+        paginator = Paginator(appointments, pageSize)
+        pageObj = paginator.page(num)
+
+        serializer = AppointmentSerializer(pageObj.object_list, many=True)
 
         return Response({"appointments": serializer.data, "employeeIds": Employee.objects.all().values_list('id', flat=True), 
-        "customerIds": Customer.objects.all().values_list('id', flat=True)})
+        "customerIds": Customer.objects.all().values_list('id', flat=True), "isNotLastPage": pageObj.has_next()})
     
     @is_not_doctor
     def post(self, request):
@@ -157,9 +163,9 @@ class AppointmentView(APIView):
         return Response({"success": "Appointment {} created successfully".format(appointment_saved)})
 
     @is_not_doctor
-    def put(self, request, pk):
+    def put(self, request, num):
 
-        savedAppointment = Appointment.objects.get(pk=pk)
+        savedAppointment = Appointment.objects.get(pk=num)
         appointment = request.data.get('appointment')
         serializer = AppointmentSerializer(instance=savedAppointment, data=appointment, partial=True)
 
@@ -169,9 +175,9 @@ class AppointmentView(APIView):
         return Response({"success": "Appointment {} updated successfully".format(appointment_saved)})
 
     @is_admin
-    def delete(self, request, pk):
+    def delete(self, request, num):
 
-        appointmentForDelete = Appointment.objects.get(pk=pk)
+        appointmentForDelete = Appointment.objects.get(pk=num)
         appointmentForDelete.delete()
 
         return Response({"success": "Appointment {} deleted successfully".format(appointmentForDelete)})

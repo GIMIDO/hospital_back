@@ -12,6 +12,39 @@ def get_access_token(employee):
 
     return str(accessToken)
 
+
+def validate_token(request):
+    jwt_auth = JWTAuthentication()
+    header = jwt_auth.get_header(request)
+    if header is None:
+        return None
+
+    raw_token = jwt_auth.get_raw_token(header)
+    if raw_token is None:
+        return None
+
+    validated_token = jwt_auth.get_validated_token(raw_token)
+
+    return validated_token
+
+
+def verify_request_token(token):
+    jwt_auth = JWTAuthentication()
+    validated_token = jwt_auth.get_validated_token(token)
+    if validated_token is None:
+        return None
+    
+    role = validated_token.payload.get("role")
+    name = validated_token.payload.get("name")
+    if role is None:
+        return None
+    if role == "Admin" or role == "Reception" or role == "Doctor":
+        return (role, name)
+    else:
+        return None
+
+# ---------------------------
+
 def authorise_only(function):
     @wraps(function)
     def wrap(self, request, *args, **kwargs):
@@ -22,6 +55,7 @@ def authorise_only(function):
             return function(self, request, *args, **kwargs)
         
     return wrap
+
 
 def is_not_doctor(function):
     @wraps(function)
@@ -52,32 +86,3 @@ def is_admin(function):
                 return HttpResponseForbidden()
         
     return wrap
-
-def validate_token(request):
-    jwt_auth = JWTAuthentication()
-    header = jwt_auth.get_header(request)
-    if header is None:
-        return None
-
-    raw_token = jwt_auth.get_raw_token(header)
-    if raw_token is None:
-        return None
-
-    validated_token = jwt_auth.get_validated_token(raw_token)
-
-    return validated_token
-
-def verify_request_token(token):
-    jwt_auth = JWTAuthentication()
-    validated_token = jwt_auth.get_validated_token(token)
-    if validated_token is None:
-        return None
-    
-    role = validated_token.payload.get("role")
-    name = validated_token.payload.get("name")
-    if role is None:
-        return None
-    if role == "Admin" or role == "Reception" or role == "Doctor":
-        return (role, name)
-    else:
-        return None
