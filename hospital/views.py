@@ -73,9 +73,9 @@ class DepartmentView(APIView):
         return Response({"success": "Department {} created successfully".format(department_saved.name)})
 
     @is_not_doctor
-    def put(self, request, pk):
+    def put(self, request, num):
 
-        savedDepartment = Department.objects.get(pk=pk)
+        savedDepartment = Department.objects.get(pk=num)
         department = request.data.get('department')
         serializer = DepartmentSerializer(instance=savedDepartment, data=department, partial=True)
 
@@ -85,9 +85,9 @@ class DepartmentView(APIView):
         return Response({"success": "Department {} updated successfully".format(department_saved.name)})
     
     @is_admin
-    def delete(self, request, pk):
+    def delete(self, request, num):
 
-        departmentForDelete = Department.objects.get(pk=pk)
+        departmentForDelete = Department.objects.get(pk=num)
         departmentForDelete.delete()
 
         return Response({"success": "Department {} deleted successfully".format(departmentForDelete.name)})
@@ -116,9 +116,9 @@ class EmployeeView(APIView):
         return Response({"success": "Employee {} created successfully".format(employee_saved.name)})
 
     @is_not_doctor
-    def put(self, request, pk):
+    def put(self, request, num):
 
-        savedEmployee = Employee.objects.get(pk=pk)
+        savedEmployee = Employee.objects.get(pk=num)
         employee = request.data.get('employee')
         serializer = EmployeeSerializer(instance=savedEmployee, data=employee, partial=True)
 
@@ -128,9 +128,9 @@ class EmployeeView(APIView):
         return Response({"success": "Employee {} updated successfully".format(employee_saved.name)})
     
     @is_admin
-    def delete(self, request, pk):
+    def delete(self, request, num):
 
-        employeeForDelete = Employee.objects.get(pk=pk)
+        employeeForDelete = Employee.objects.get(pk=num)
         employeeForDelete.delete()
 
         return Response({"success": "Employee {} deleted successfully".format(employeeForDelete.name)})
